@@ -60,11 +60,67 @@ def densenet(images, num_classes=1001, is_training=False,
     with tf.variable_scope(scope, 'DenseNet', [images, num_classes]):
         with slim.arg_scope(bn_drp_scope(is_training=is_training,
                                          keep_prob=dropout_keep_prob)) as ssc:
-            pass
+             pass
             ##########################
             # Put your code here.
+            
+            with slim.arg_scope([slim.conv2d, slim.max_pool2d, slim.avg_pool2d], stride = 1, padding = "SAME"):                
+                def transition_layer(net, out_nums, scope = "transition_layer"):
+                    net = slim.conv2d(net, out_nums, [1,1], scope = scope + "_Conv2d_1x1")
+                    net = slim.avg_pool2d(net, [2,2], stride = 2, scope = scope + "_AvgPool_3x3")
+                    return net
+                
+                end_point = "Pre_block_layer"
+                #224 x 224 x3
+                net = slim.conv2d(images, 2*growth, [7,7], stride = 2, scope = end_point + "_Conv2d_7x7")
+                net = slim.max_pool2d(net, [3,3], stride =2, scope = end_point + "_Maxpool_3x3")
+                end_points[end_point] = net
+                
+                #56 x 56 x 48 
+                end_point = "Block_1"
+                net = block(net, 6, growth, scope = end_point) #56 x 56 x 8*growth
+                end_points[end_point] = net
+                
+                
+                #56 x 56 x 192
+                end_point = "Transition_1"
+                net = transition_layer(net, reduce_dim(net), scope = end_point)
+                end_points[end_point] = net
+                
+                #28 x 28 x 96
+                end_point = "Block_2"
+                net = block(net, 12, growth, scope = end_point) #28 x 28 x 16*growth
+                end_points[end_point] = net
+                
+                #28 x 28 x 384
+                end_point = "Transition_2"
+                net = transition_layer(net, reduce_dim(net), scope = end_point)
+                end_points[end_point] = net
+                
+                #14 x 14 x 192
+                end_point = "Block_3"
+                net = block(net, 32, growth, scope = end_point) #14 x 14 x 40*growth
+                end_points[end_point] = net
+                
+                #14 x 14 x 960
+                end_point = "Transition_3"
+                net = transition_layer(net, reduce_dim(net), scope = end_point)
+                end_points[end_point] = net
+                
+                #7 x 7 x 480
+                end_point = "Block_4"
+                net = block(net, 32, growth, scope = end_point) #14 x 14 x 32*growth #7 x 7 x 52*growth
+                end_points[end_point] = net
+                
+                #7 x 7 x 1248                
+                net = slim.avg_pool2d(net, [7,7], padding = "VALID", scope = "Pre_logits")
+                with slim.arg_scope(densenet_arg_scope()):                    
+                    logits = slim.conv2d(net, num_classes, [1,1])
+                    logits = tf.squeeze(logits, [1,2], scope = "Logits")
+                end_points["Logits"] = logits
+                end_points["Predictions"] = slim.softmax(logits, scope = "Predictions") 
+                
             ##########################
-
     return logits, end_points
 
 
@@ -92,7 +148,7 @@ def densenet_arg_scope(weight_decay=0.004):
         [slim.conv2d],
         weights_initializer=tf.contrib.layers.variance_scaling_initializer(
             factor=2.0, mode='FAN_IN', uniform=False),
-        activation_fn=None, biases_initializer=None, padding='same',
+        activation_fn=None, biases_initializer=None, padding='SAME',
             stride=1) as sc:
         return sc
 
