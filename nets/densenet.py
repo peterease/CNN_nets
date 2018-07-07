@@ -30,7 +30,7 @@ def block(net, layers, growth, scope='block'):
     return net
 
 
-def densenet(images, num_classes=1001, is_training=False,
+def densenet(images, num_classes=200, is_training=False,
              dropout_keep_prob=0.8,
              scope='densenet'):
     """Creates a variant of the densenet model.
@@ -114,13 +114,14 @@ def densenet(images, num_classes=1001, is_training=False,
                 end_points[end_point] = net
                 
                 #7 x 7 x 1248
-                with tf.variable_scope("Logits"):
-                    net = slim.avg_pool2d(net, [7,7], padding = "VALID", scope = "Pre_logits")
-                    with slim.arg_scope(densenet_arg_scope()):                    
-                        logits = slim.conv2d(net, num_classes, [1,1])
-                        logits = tf.squeeze(logits, [1,2], name = "SpatialSqueeze")
+                end_point = "Pre_Logits"             
+                net = slim.avg_pool2d(net, [7,7], padding = "VALID", scope = end_point)
+                end_points[end_point] = net
+                with slim.arg_scope(densenet_arg_scope()):                    
+                    logits = slim.conv2d(net, num_classes, [1,1])
+                    logits = tf.squeeze(logits, [1,2], name = "SpatialSqueeze")
                 end_points["Logits"] = logits
-                end_points["Predictions"] = slim.softmax(logits, scope = "Predictions") 
+                end_points["Predictions"] = tf.nn.softmax(logits, scope = "Predictions") 
                 
             ##########################
     return logits, end_points
@@ -137,7 +138,7 @@ def bn_drp_scope(is_training=True, keep_prob=0.8):
             return bsc
 
 
-def densenet_arg_scope(weight_decay=0.004):
+def densenet_arg_scope(weight_decay=0.1):
     """Defines the default densenet argument scope.
 
     Args:
