@@ -138,7 +138,7 @@ def bn_drp_scope(is_training=True, keep_prob=0.8):
             return bsc
 
 
-def densenet_arg_scope(weight_decay=0.1):
+def densenet_arg_scope(weight_decay=0.004):
     """Defines the default densenet argument scope.
 
     Args:
