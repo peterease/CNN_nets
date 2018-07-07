@@ -113,11 +113,12 @@ def densenet(images, num_classes=1001, is_training=False,
                 net = block(net, 32, growth, scope = end_point) #14 x 14 x 32*growth #7 x 7 x 52*growth
                 end_points[end_point] = net
                 
-                #7 x 7 x 1248                
-                net = slim.avg_pool2d(net, [7,7], padding = "VALID", scope = "Pre_logits")
-                with slim.arg_scope(densenet_arg_scope()):                    
-                    logits = slim.conv2d(net, num_classes, [1,1])
-                    logits = tf.squeeze(logits, [1,2], scope = "Logits")
+                #7 x 7 x 1248
+                with tf.variable_scope("Logits"):
+                    net = slim.avg_pool2d(net, [7,7], padding = "VALID", scope = "Pre_logits")
+                    with slim.arg_scope(densenet_arg_scope()):                    
+                        logits = slim.conv2d(net, num_classes, [1,1])
+                        logits = tf.squeeze(logits, [1,2], name = "SpatialSqueeze")
                 end_points["Logits"] = logits
                 end_points["Predictions"] = slim.softmax(logits, scope = "Predictions") 
                 
