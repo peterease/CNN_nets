@@ -121,7 +121,7 @@ def densenet(images, num_classes=200, is_training=False,
                     logits = slim.conv2d(net, num_classes, [1,1])
                     logits = tf.squeeze(logits, [1,2], name = "SpatialSqueeze")
                 end_points["Logits"] = logits
-                end_points["Predictions"] = tf.nn.softmax(logits, scope = "Predictions") 
+                end_points["Predictions"] = slim.softmax(logits, scope = "Predictions") 
                 
             ##########################
     return logits, end_points
