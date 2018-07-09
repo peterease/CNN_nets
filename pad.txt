@@ -1,2 +1,0 @@
-1. DenseNet的Growthrate理解的描述。
-    DenseNet的结构包括稠密块与过渡层，在该模型中,如果每层结构产生k=Growth rate的特征图，那在l层会得到k0+k(l-1)个输入特征图，在DenseNet中，每层的输入来自前面所有层输出的拼接。在DenseNet的论文中有提及，k的取值不用太大就能得到现有优秀深度网络在主流数据集的性能表现，而Growth rate的取值直接决定了DenseNet的总深度
